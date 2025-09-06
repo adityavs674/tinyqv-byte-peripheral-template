@@ -7,10 +7,8 @@ from cocotb.triggers import ClockCycles
 
 from tqv import TinyQV
 
-# When submitting your design, change this to 16 + the peripheral number
-# in peripherals.v.  e.g. if your design is i_user_simple00, set this to 16.
-# The peripheral number is not used by the test harness.
-PERIPHERAL_NUM = 16
+
+PERIPHERAL_NUM = 19
 
 @cocotb.test()
 async def test_project(dut):
@@ -32,20 +30,34 @@ async def test_project(dut):
 
     dut._log.info("Test project behavior")
 
-    # Test register write and read back
+    # Testing register write and read back
     await tqv.write_reg(0, 20)
-    assert await tqv.read_reg(0) == 20
-
-    # Set an input value, in the example this will be added to the register value
-    dut.ui_in.value = 30
-
-    # Wait for two clock cycles to see the output values, because ui_in is synchronized over two clocks,
-    # and a further clock is required for the output to propagate.
     await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(0) == 20
+    await tqv.write_reg(1, 30)
+    await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(1) == 30
 
-    # The following assertion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    
+    #Testing ALU operations
+    #Setting the operands
+    await tqv.write_reg(0, 9)
+    await tqv.write_reg(1, 6)
+    #Testing ADD
+    await tqv.write_reg(2, 0)
+    await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(3) == 15
+    #Testing SUB
+    await tqv.write_reg(2, 1)
+    await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(3) == 3
+    #Testing AND
+    await tqv.write_reg(2, 2)
+    await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(3) == 0
+    #Testing OR
+    await tqv.write_reg(2, 3)
+    await ClockCycles(dut.clk, 3)
+    assert await tqv.read_reg(3) == 15
+    
